@@ -1,0 +1,43 @@
+name: CI/CD Flujo
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-db:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: 123456
+          MYSQL_DATABASE: restaurante
+
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --password=123456"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar MySQL Client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
+      - name: Esperar a que MySQL esté listo
+        run: sleep 20  # Ajustar si es necesario
+
+      - name: 🗄️ Crear estructura de base de datos
+        run: |
+          mysql -h 127.0.0.1 -u root -123456 restaurante < Scripts/Vistas/Script-Vistas.sql
+
+      
